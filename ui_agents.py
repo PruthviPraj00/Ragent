@@ -24,12 +24,12 @@ knowledge_base = WebsiteKnowledgeBase(
     max_links=100,
     # Add these parameters to improve crawling
     max_depth=3,
-    follow_links_containing=["/docs/", "/components/", "/examples/"],
+    follow_links_containing=["/docs/"],
     ignore_links_containing=["blog", "changelog"],
     vector_db=vector_db 
 )
 # Force recreate to refresh the knowledge base
-knowledge_base.load(recreate=True)  # Set to True for first run to rebuild index
+# knowledge_base.load(recreate=True)  # Set to True for first run to rebuild index
 
 
 flyon_agent = Agent(
@@ -52,6 +52,4 @@ flyon_agent = Agent(
     show_tool_calls=True,
     markdown=True,
 )
-
-flyon_agent.print_response("create a responsive navigation bar with a logo, menu items, and a user profile dropdown", stream=True)
 

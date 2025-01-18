@@ -6,6 +6,7 @@ from phi.document.chunking.document import DocumentChunking
 from phi.vectordb.pgvector import PgVector
 from phi.model.anthropic import Claude
 from phi.embedder.openai import OpenAIEmbedder
+from phi.model.openai import OpenAIChat
 from phi.tools.firecrawl import FirecrawlTools
 
 # Load environment variables for API keys
@@ -36,25 +37,21 @@ knowledge_base = WebsiteKnowledgeBase(
 )
 
 # Load or create the knowledge base
-knowledge_base.load(recreate=True)  # Set to False after first run
+knowledge_base.load(recreate=False)  # Set to False after first run
 
 # Create the Component Analyzer agent
 analyzer = Agent(
     name="Component Analyzer",
-    model=Claude(id="claude-3-5-sonnet-20240620"),
+    model=OpenAIChat(id="gpt-4o"),
     knowledge=knowledge_base,
     search_knowledge=True,
-    system_prompt="""You are an expert UI Component Analyzer specializing in FlyonUI.
-    Your role is to analyze requirements and suggest appropriate components.
-    
-    For each requirement:
-    1. Identify the key UI elements needed
-    2. Suggest specific FlyonUI components that best match the requirements
-    3. Explain why each component is appropriate
-    4. Provide component features and customization options
-    
-    Use the knowledge base to reference FlyonUI documentation.
-    Format your response in clear sections with markdown.""",
+    instructions=[
+        "1. Analyze UI requirements and break them down into component needs",
+        "2. Identify suitable FlyonUI components and their HTML structure",
+        "3. Suggest appropriate Tailwind CSS classes for styling and responsiveness",
+        "4. Consider accessibility and best practices",
+        "5. Provide a clear component architecture plan"
+    ],
     show_tool_calls=True,
     read_chat_history=True,
     markdown=True
@@ -63,24 +60,37 @@ analyzer = Agent(
 # Create the Code Generator agent
 generator = Agent(
     name="Code Generator",
-    model=Claude(id="claude-3-5-sonnet-20240620"),
+    model=OpenAIChat(id="gpt-4o"),
     knowledge=knowledge_base,
     search_knowledge=True,
-    system_prompt="""You are an expert Frontend Developer specializing in FlyonUI.
-    Your role is to generate implementation code for UI requirements.
-    
-    For each requirement:
-    1. Generate clean, semantic HTML using FlyonUI components
-    2. Implement efficient Tailwind CSS styling
-    3. Include all necessary classes and attributes
-    4. Add comments explaining key parts of the code
-    
-    Use the knowledge base to reference FlyonUI documentation.
-    Always provide complete, working code snippets with explanations.""",
+    instructions=[
+        "1. Generate semantic HTML structure using FlyonUI components",
+        "2. Implement responsive layouts with Tailwind CSS utility classes",
+        "3. Follow FlyonUI's component patterns and best practices",
+        "4. Ensure proper integration between FlyonUI and Tailwind CSS",
+        "5. Add detailed comments explaining the implementation",
+        "6. Include any required JavaScript interactions",
+        "7. Consider browser compatibility and performance"
+    ],
     show_tool_calls=True,
     read_chat_history=True,
     markdown=True
 )
 
-if __name__ == "__main__":
-    pass 
+multi_ai_agent = Agent(
+    name="Multi Agent",
+    model=OpenAIChat(id="gpt-4o"),
+    team=[analyzer, generator],
+    instructions=[
+        "1. Component Analyzer: Break down UI requirements and plan the component architecture",
+        "2. Component Analyzer: Suggest FlyonUI components and their HTML structure",
+        "3. Component Analyzer: Recommend Tailwind CSS classes for styling",
+        "4. Code Generator: Implement the complete solution with FlyonUI + HTML + Tailwind CSS",
+        "5. Code Generator: Add necessary JavaScript interactions and ensure responsiveness",
+        "6. Both agents should focus on modern UI/UX practices and performance",
+    ],
+    show_tool_calls=True,
+    markdown=True,
+)
+
+multi_ai_agent.print_response("create a responsive navigation bar with a logo, menu items, and a user profile dropdown", stream=True)

@@ -1,0 +1,9 @@
+firecrawl-py
+pgvector
+psycopg2-binary
+sqlalchemy
+phidata
+anthropic
+python-dotenv
+streamlit
+openai
